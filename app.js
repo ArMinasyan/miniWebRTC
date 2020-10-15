@@ -7,38 +7,32 @@ app.use('/', express.static('public'))
 
 let broadcaster = null;
 io.on('connection', (socket) => {
-  socket.on('join', (roomId) => {
-    const roomClients = io.sockets.adapter.rooms[roomId] || { length: 0 };
+  socket.on('join', (roomID) => {
+    const roomClients = io.sockets.adapter.rooms[roomID] || { length: 0 };
     const numberOfClients = roomClients.length;
 
     // These events are emitted only to the sender socket.
     if (numberOfClients == 0) {
 
-      socket.join(roomId)
-      socket.emit('room_created', roomId)
+      socket.join(roomID)
+      socket.emit('room_created', roomID)
     } else if (numberOfClients == 1) {
 
-      socket.join(roomId)
-      socket.emit('room_joined', roomId)
+      socket.join(roomID)
+      socket.emit('room_joined', roomID)
     } else {
-      socket.emit('full_room', roomId)
+      socket.emit('full_room', roomID)
     }
   })
 
   // These events are emitted to all the sockets connected to the same room except the sender.
-  socket.on('start_call', (roomId) => {
-    socket.broadcast.to(roomId).emit('start_call')
-  })
-  socket.on('webrtc_offer', (event) => {
-    socket.broadcast.to(event.roomId).emit('webrtc_offer', event.sdp)
-  })
-  socket.on('webrtc_answer', (event) => {
-    socket.broadcast.to(event.roomId).emit('webrtc_answer', event.sdp)
-  })
-  socket.on('webrtc_ice_candidate', (event) => {
-    console.log(event);
-    socket.broadcast.to(event.roomId).emit('webrtc_ice_candidate', event)
-  })
+  socket.on('start_call', (roomID) => { socket.broadcast.to(roomID).emit('start_call') });
+
+  socket.on('webrtc_offer', (event) => { socket.broadcast.to(event.roomID).emit('webrtc_offer', event.sdp) });
+
+  socket.on('webrtc_answer', (event) => { socket.broadcast.to(event.roomID).emit('webrtc_answer', event.sdp) });
+
+  socket.on('webrtc_ice_candidate', (event) => { socket.broadcast.to(event.roomID).emit('webrtc_ice_candidate', event) });
 })
 
 
