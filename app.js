@@ -28,11 +28,10 @@ io.on('connection', (socket) => {
   // These events are emitted to all the sockets connected to the same room except the sender.
   socket.on('start_call', (roomID) => { socket.broadcast.to(roomID).emit('start_call') });
 
-  socket.on('webrtc_offer', (event) => { socket.broadcast.to(event.roomID).emit('webrtc_offer', event.sdp) });
+  socket.on('offer', (event) => { socket.broadcast.to(event.id).emit('offer', event) });
 
-  socket.on('webrtc_answer', (event) => { socket.broadcast.to(event.roomID).emit('webrtc_answer', event.sdp) });
+  socket.on('answer', (event) => { socket.broadcast.to(event.id).emit('answer', event) });
 
-  socket.on('webrtc_ice_candidate', (event) => { socket.broadcast.to(event.roomID).emit('webrtc_ice_candidate', event) });
 })
 
 
