@@ -28,10 +28,13 @@ io.on('connection', (socket) => {
   // These events are emitted to all the sockets connected to the same room except the sender.
   socket.on('start_call', (roomID) => { socket.broadcast.to(roomID).emit('start_call') });
 
-  socket.on('offer', (event) => { socket.broadcast.to(event.id).emit('offer', event) });
+  socket.on('offer', (event) => { socket.broadcast.to(event.id).emit('offer', event.offer) });
 
-  socket.on('answer', (event) => { socket.broadcast.to(event.id).emit('answer', event) });
+  socket.on('answer', (event) => { socket.broadcast.to(event.id).emit('answer', event.answer) });
 
+  socket.on('candidate', (event) => { socket.broadcast.to(event.id).emit('candidate', event) })
+
+  socket.on('track', (event) => { socket.broadcast.to(event.id).emit('track') })
 })
 
 
@@ -43,6 +46,8 @@ const port = process.env.PORT || 8000
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/build/index.html');
 })
+
+
 
 server.listen(port, () => {
   console.log(`Express server listening on port ${port}`)
