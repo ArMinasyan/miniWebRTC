@@ -7,34 +7,28 @@ app.use('/', express.static('public'))
 
 let broadcaster = null;
 io.on('connection', (socket) => {
-  socket.on('join', (roomID) => {
-    const roomClients = io.sockets.adapter.rooms[roomID] || { length: 0 };
-    const numberOfClients = roomClients.length;
+  socket.on('join', (id) => {
+    const roomClients = io.sockets.adapter.rooms[id] || { length: 0 };
 
-    // These events are emitted only to the sender socket.
-    if (numberOfClients == 0) {
-
-      socket.join(roomID)
-      socket.emit('room_created', roomID)
-    } else if (numberOfClients == 1) {
-
-      socket.join(roomID)
-      socket.emit('room_joined', roomID)
-    } else {
-      socket.emit('full_room', roomID)
+    if (roomClients.length > 1) socket.emit('full_room', id);
+    else {
+      socket.join(id);
+      socket.emit('join', id);
     }
+
   })
 
-  // These events are emitted to all the sockets connected to the same room except the sender.
-  socket.on('start_call', (roomID) => { socket.broadcast.to(roomID).emit('start_call') });
 
-  socket.on('offer', (event) => { socket.broadcast.to(event.id).emit('offer', event.offer) });
+  socket.on('offer', event => { socket.broadcast.to(event.id).emit('offer', event.offer) });
+  socket.on('answer', event => { socket.broadcast.to(event.id).emit('answer', event.answer) });
 
-  socket.on('answer', (event) => { socket.broadcast.to(event.id).emit('answer', event.answer) });
+  socket.on('end', event => {
 
-  socket.on('candidate', (event) => { socket.broadcast.to(event.id).emit('candidate', event) })
+    socket.broadcast.to(event.id).emit('end');
+    socket.leave(event.id);
+  });
 
-  socket.on('track', (event) => { socket.broadcast.to(event.id).emit('track') })
+  socket.on('candidate', event => { socket.broadcast.to(event.id).emit('candidate', event) })
 })
 
 
@@ -43,6 +37,9 @@ app.use(express.static(__dirname + '/build'));
 // START THE SERVER =================================================================
 const port = process.env.PORT || 8000
 
+app.post('/login', (req, res) => {
+
+})
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/build/index.html');
 })
