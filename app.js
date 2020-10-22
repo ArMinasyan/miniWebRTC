@@ -1,12 +1,13 @@
 const express = require('express')
 const app = express()
 const server = require('http').createServer(app)
-const io = require('socket.io')(server)
-const path = require('path');
+const io = require('socket.io')(server);
 app.use('/', express.static('public'))
 
-let broadcaster = null;
+
 io.on('connection', (socket) => {
+
+
   socket.on('join', (id) => {
     const roomClients = io.sockets.adapter.rooms[id] || { length: 0 };
 
@@ -15,7 +16,6 @@ io.on('connection', (socket) => {
       socket.join(id);
       socket.emit('join', id);
     }
-
   })
 
 
@@ -23,9 +23,13 @@ io.on('connection', (socket) => {
   socket.on('answer', event => { socket.broadcast.to(event.id).emit('answer', event.answer) });
 
   socket.on('end', event => {
+    io.to(event.id).emit('end');
 
-    socket.broadcast.to(event.id).emit('end');
-    socket.leave(event.id);
+    io.in(event.id).clients(function (error, ids) {
+      ids.forEach(id => {
+        io.sockets.sockets[id].leave(event.id);
+      })
+    })
   });
 
   socket.on('candidate', event => { socket.broadcast.to(event.id).emit('candidate', event) })
